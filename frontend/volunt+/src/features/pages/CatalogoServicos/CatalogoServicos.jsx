@@ -220,7 +220,6 @@ export default function CatalogoServicos() {
               width="100%"
               value={filters.category}
               onChange={handleFilterChange}
-              defaultOption="Todas as categorias"
               options={getCategoryOptions(services)}
             />
 
@@ -230,7 +229,6 @@ export default function CatalogoServicos() {
               width="100%"
               value={filters.modality}
               onChange={handleFilterChange}
-              defaultOption="Todas as modalidades"
               options={getModalityOptions(services)}
             />
 
@@ -240,7 +238,6 @@ export default function CatalogoServicos() {
               width="100%"
               value={filters.locations}
               onChange={handleFilterChange}
-              defaultOption="Todas as localizações"
               options={getLocationOptions(services)}
             />
 
@@ -250,7 +247,6 @@ export default function CatalogoServicos() {
               width="100%"
               value={filters.state}
               onChange={handleFilterChange}
-              defaultOption="Todos os estados"
               options={getStateOptions(services)}
             />
 
@@ -260,7 +256,6 @@ export default function CatalogoServicos() {
               width="100%"
               value={filters.typeLocalization}
               onChange={handleFilterChange}
-              defaultOption="Todos os tipos"
               options={getLocationTypeOptions(services)}
             />
             <MultiSelect
@@ -269,7 +264,6 @@ export default function CatalogoServicos() {
               width="100%"
               value={filters.genero}
               onChange={handleFilterChange}
-              defaultOption="Todos os gêneros"
               options={getGenderOptions(services)}
             />
             <MultiSelect
@@ -278,7 +272,6 @@ export default function CatalogoServicos() {
               width="100%"
               value={filters.diaDaSemana}
               onChange={handleFilterChange}
-              defaultOption="Todos os dias"
               options={getDayWeekOptions(services)}
             />
 
@@ -288,7 +281,6 @@ export default function CatalogoServicos() {
               width="100%"
               value={filters.turno}
               onChange={handleFilterChange}
-              defaultOption="Todos os turnos"
               options={getShiftOptions(services)}
             />
 
@@ -298,7 +290,6 @@ export default function CatalogoServicos() {
               width="100%"
               value={filters.avaliacao}
               onChange={handleFilterChange}
-              defaultOption="Todas as avaliações"
               options={getScoreOptions()}
             />
 
@@ -308,7 +299,6 @@ export default function CatalogoServicos() {
               width="100%"
               value={filters.dataNascimento}
               onChange={handleFilterChange}
-              defaultOption="Todas as idades"
               options={getAge(services)}
             />
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { userDTO } from "types/DTOs/userDTO";
 
 export function getUserById(id) {
-  return userDTO.find((user) => Number(user.id) === Number(id));
+  return userDTO.find((user) => String(user.id) === String(id));
 }
 
 import { getUserById } from "services/userService";
@@ -39,5 +39,5 @@ export function useUser(id) {
   };
 }
 export function getUserById(id) {
-  return userDTO.find((user) => Number(user.id) === Number(id));
+    return userDTO.find((user) => String(user.id) === String(id));
 }

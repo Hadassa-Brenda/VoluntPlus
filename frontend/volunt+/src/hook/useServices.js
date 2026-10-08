@@ -13,7 +13,6 @@ export function useServices() {
 
         const data = await getServices();
         setServices(data);
-        console.log("DATA RECEBIDA:", data);
       } catch (error) {
         console.error("Erro ao buscar serviços:", error);
         setError(error);

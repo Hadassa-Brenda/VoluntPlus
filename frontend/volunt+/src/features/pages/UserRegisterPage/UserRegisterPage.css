@@ -152,23 +152,28 @@
   align-items: center;
 }
 
+.user-register-page__topbar .user-register-page__back-button {
+  position: absolute;
+  left: 0;
+}
+
 .user-register-page__topbar {
   position: relative;
   z-index: 2;
   width: min(100%, 980px);
+  min-height: 48px;
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  justify-content: center;
 }
 
 .user-register-page__topbar-title {
-  margin: 0;
   color: var(--color-text);
   font-size: 24px;
   font-weight: 900;
   text-align: center;
+  align-items: center;
 }
 
 .user-register-page__heading {
@@ -241,6 +246,17 @@
   font-size: 14px;
 }
 
+.user-register-form__fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.user-register-form__fields:disabled {
+  opacity: 0.66;
+}
+
 .user-register-form__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -260,6 +276,24 @@
 
 .user-register-form__full-field {
   grid-column: 1 / -1;
+}
+
+.user-register-form__profile-note {
+  min-height: 56px;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  padding: 10px 14px;
+  border: 1px solid rgba(123, 53, 232, 0.18);
+  border-radius: 12px;
+  background: #f8f5ff;
+  color: var(--color-text);
+  font-size: 13px;
+}
+
+.user-register-form__profile-note span {
+  color: var(--color-text-soft);
+  font-size: 12px;
 }
 
 .user-register-form label {
@@ -382,6 +416,14 @@
     background 0.2s ease;
 }
 
+.user-register-form__actions button:disabled,
+.user-register-form__link-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+  transform: none;
+  box-shadow: none;
+}
+
 .user-register-form__secondary-button {
   background: var(--color-white);
   color: var(--color-text-dark);
@@ -426,6 +468,113 @@
   color: var(--color-primary);
 }
 
+.user-register-form__captcha:empty {
+  min-height: 1px;
+}
+
+.user-register-form--verification {
+  width: min(100%, 560px);
+  padding: 38px;
+  text-align: center;
+}
+
+.user-register-form__verification-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.user-register-form__verification-icon {
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(123, 53, 232, 0.13), rgba(242, 56, 133, 0.12));
+  color: var(--color-primary);
+}
+
+.user-register-form__verification-eyebrow {
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.user-register-form__verification-view h2 {
+  margin: 8px 0 10px;
+  color: var(--color-text);
+  font-size: 28px;
+}
+
+.user-register-form__verification-view > p {
+  margin: 0 0 8px;
+  color: var(--color-text-soft);
+  line-height: 1.5;
+}
+
+.user-register-form__verification-email {
+  margin-bottom: 16px;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.user-register-form__verification-view .MuiFormControl-root {
+  width: min(100%, 320px);
+  margin-top: 8px;
+  text-align: left;
+}
+
+.user-register-form__verification-view input {
+  text-align: center;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: 0.28em;
+}
+
+.user-register-form__verification-actions {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.user-register-form__verification-actions > .user-register-form__link-button {
+  margin: 0 0 18px;
+}
+
+.user-register-form__link-button {
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.user-register-form__status,
+.user-register-form__flow-error {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.user-register-form__status {
+  color: #0d6b49;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.user-register-form__flow-error {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
 @media (max-width: 1024px) {
   .user-register-page__background-photo {
     display: none;
@@ -466,6 +615,10 @@
   .user-register-form {
     padding: 22px;
     border-radius: 24px;
+  }
+
+  .user-register-form--verification {
+    padding: 28px 22px;
   }
 
   .user-register-form__grid,

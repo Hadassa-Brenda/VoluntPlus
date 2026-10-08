@@ -1,3 +1,4 @@
+import { locationKey, serviceValues } from "./serviceValues";
 import { TIPO_LOCALIZACAO } from "types/enum/TipoLocalização";
 import { GENDER_OPTIONS } from "types/enum/Gender";
 import { DiaSemana } from "types/enum/DiaSemana";
@@ -32,14 +33,14 @@ export function getUniqueOptions(data = [], { value, label }) {
 
 export function getLocationOptions(data = []) {
   return getUniqueOptions(data, {
-    value: (service) => service.localizacao?.id ?? service.idLocalizacao,
+    value: (service) => locationKey(service),
 
     label: (service) => {
       const localizacao = service.localizacao;
 
       if (!localizacao) return "";
 
-      return [localizacao.bairro, localizacao.cidade]
+      return [localizacao.bairro, localizacao.cidade, localizacao.estado]
         .filter(Boolean)
         .join(" - ");
     },
@@ -129,7 +130,7 @@ export function getDayWeekOptions(data = []) {
       return [];
     }
 
-    return service.agendamentos.map((agendamento) => agendamento.diaSemana);
+    return service.agendamentos.flatMap((agendamento) => serviceValues(agendamento.diaSemana));
   });
 
   return getUniqueOptions(days, {
@@ -149,7 +150,7 @@ export function getShiftOptions(data = []) {
       return [];
     }
 
-    return service.agendamentos.map((agendamento) => agendamento.turno);
+    return service.agendamentos.flatMap((agendamento) => serviceValues(agendamento.turno));
   });
 
   return getUniqueOptions(shifts, {
@@ -173,7 +174,7 @@ export function getScoreOptions() {
 export function getAge(services = []) {
   const idades = services
     .map((service) =>
-      calculateAge(service.usuario?.dataNascimento ?? service.dataNascimento),
+      service.usuario?.idade ?? calculateAge(service.usuario?.dataNascimento ?? service.dataNascimento),
     )
     .filter((idade) => idade !== null && idade !== undefined);
 

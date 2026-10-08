@@ -11,6 +11,8 @@ export const initialFormData = {
   estado: "",
   cidade: "",
   bairro: "",
+  tipoLocalizacao: "",
+  reviewConfirmed: false,
 
   diaSemana: "",
   turno: "",
@@ -49,5 +51,5 @@ export const reviewTexts = {
 
   title: "Revise seu serviço",
 
-  description: "Confira as informações antes de enviar para análise.",
+  description: "Confira as informações e confirme a revisão antes de publicar.",
 };

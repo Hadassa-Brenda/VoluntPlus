@@ -118,6 +118,52 @@
   gap: 18px;
   padding: 25px 29px 29px;
 }
+.profile-edit-section {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #e4e7f0;
+  border-radius: 12px;
+  background: #f8faff;
+}
+.profile-edit-section h3,
+.profile-edit-section p {
+  margin: 0;
+}
+.profile-edit-section h3 {
+  color: #20253a;
+  font-size: 16px;
+}
+.profile-edit-section > p {
+  color: #697087;
+  font-size: 13px;
+}
+.profile-edit-account-data {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  color: #50586a;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.profile-edit-section .MuiFormControl-root {
+  width: 100%;
+  max-width: none !important;
+}
+.profile-edit-custom-field {
+  grid-column: 1 / -1;
+}
+.profile-edit-error {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 14px;
+  line-height: 1.5;
+}
 .profile-edit-modal label {
   display: grid;
   gap: 7px;
@@ -173,6 +219,15 @@
   gap: 7px;
   background: var(--color-primary);
   color: #fff;
+}
+.profile-edit-actions button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+.profile-switch-error {
+  color: #b42318;
+  font-weight: 600;
+  margin-top: 16px;
 }
 .profile-toast {
   position: fixed;

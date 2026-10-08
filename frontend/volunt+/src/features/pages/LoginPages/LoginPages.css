@@ -14,6 +14,47 @@
   justify-content: space-between;
 }
 
+.login-page--recovery .login-page__left {
+  justify-content: flex-start;
+  gap: clamp(32px, 8vh, 96px);
+  padding: clamp(24px, 4vw, 64px);
+}
+
+.login-page__topbar {
+  display: flex;
+  align-items: center;
+}
+
+.login-page__back-button {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 0;
+  border: 0;
+  background: transparent;
+  color: #081035;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-page--recovery .login-page__text {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+@media (max-width: 980px) {
+  .login-page--recovery .login-page__left {
+    gap: 24px;
+    padding: 24px 28px;
+  }
+
+  .login-page--recovery .login-page__text {
+    margin: 0;
+  }
+}
+
 .login-page__logo {
   width: fit-content;
   display: inline-flex;
@@ -209,6 +250,29 @@
   color: var(--color-primary);
   font-weight: 800;
   text-decoration: none;
+}
+
+.login-card__inline-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 4px 0 22px;
+}
+
+.login-card__inline-actions button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.login-card__inline-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .login-card__button {

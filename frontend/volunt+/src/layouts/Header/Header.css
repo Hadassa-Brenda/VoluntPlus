@@ -67,17 +67,44 @@
 }
 
 .header__actions {
-  min-width: 405px;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 16px;
 }
 
+.header__service-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header__service-link {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.header__service-link:hover {
+  border-color: var(--color-primary);
+  background: #f8f5ff;
+}
+
 .header__icon-button {
   width: 44px;
   height: 44px;
-  border: 1px solid (--color-border);
+  border: 1px solid var(--color-border);
   border-radius: 50%;
   background: var(--color-white);
   color: var(--color-text);
@@ -121,6 +148,37 @@
   font-weight: 900;
 }
 
+.header__clerk-account {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.header__account-link,
+.header__signout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.header__signout {
+  color: var(--color-text-soft);
+}
+
+.header__signout:hover {
+  color: var(--color-danger);
+}
+
 @media (max-width: 1180px) {
   .header {
     padding: 0 22px;
@@ -134,12 +192,16 @@
     min-width: auto;
   }
 
+  .header__service-link {
+    padding: 0 9px;
+  }
+
   .header__profile {
     display: none;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 980px) {
   .header {
     height: auto;
     padding: 16px;
@@ -187,6 +249,7 @@
   .header__actions {
     min-width: 0;
     flex: 1;
+    gap: 8px;
   }
 
   .header__primary-button {
@@ -198,6 +261,10 @@
     padding: 0 10px;
     font-size: 12px;
     gap: 5px;
+  }
+
+  .header__clerk-account > span {
+    display: none;
   }
 }
 
@@ -221,6 +288,20 @@
     gap: 5px;
   }
 
+  .header__service-actions {
+    gap: 4px;
+  }
+
+  .header__service-link {
+    width: 36px;
+    min-height: 36px;
+    padding: 0;
+  }
+
+  .header__service-link span {
+    display: none;
+  }
+
   .header__primary-button {
     min-height: 40px;
     padding: 0 7px;
@@ -235,5 +316,14 @@
   .header__menu-button {
     width: 36px;
     height: 36px;
+  }
+
+  .header__clerk-account {
+    gap: 10px;
+  }
+
+  .header__account-link span,
+  .header__signout span {
+    display: none;
   }
 }
