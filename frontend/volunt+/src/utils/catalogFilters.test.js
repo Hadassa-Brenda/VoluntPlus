@@ -30,3 +30,10 @@ test('inactive services stay out of public results', () => {
 test('new JSON arrays also produce separate schedule options', () => {
  expect(getDayWeekOptions(map([{ ...active, diaDaSemana: '["TERCA","QUINTA"]' }])).map(option => option.value)).toEqual(['TERCA', 'QUINTA']);
 });
+
+test('catalog preserves review aggregates returned by the backend', () => {
+ const [service] = map([{ ...active, avaliacaoMedia: 4, quantidadeAvaliacoes: 1 }]);
+
+ expect(service.avaliacaoMedia).toBe(4);
+ expect(service.quantidadeAvaliacoes).toBe(1);
+});

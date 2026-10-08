@@ -24,6 +24,8 @@ export function mapServices({
   agendamentos,
 }) {
   return services.map((service) => {
+    const hasEmbeddedReviews =
+      Array.isArray(service.avaliacoes) || Array.isArray(service.reviews);
     const serviceReviews = Array.isArray(service.avaliacoes)
       ? service.avaliacoes
       : Array.isArray(service.reviews)
@@ -37,9 +39,22 @@ export function mapServices({
       0,
     );
 
-    const ratingAverage = serviceReviews.length
+    const reviewsCountFromApi =
+      service.quantidadeAvaliacoes ?? service.reviewCount;
+    const averageRatingFromApi = service.avaliacaoMedia ?? service.averageRating;
+    const reviewsCount = hasEmbeddedReviews
+      ? serviceReviews.length
+      : Number.isFinite(Number(reviewsCountFromApi))
+        ? Number(reviewsCountFromApi)
+        : serviceReviews.length;
+    const calculatedRatingAverage = serviceReviews.length
       ? Number((ratingSum / serviceReviews.length).toFixed(1))
       : 0;
+    const ratingAverage = hasEmbeddedReviews
+      ? calculatedRatingAverage
+      : Number.isFinite(Number(averageRatingFromApi))
+        ? Number(Number(averageRatingFromApi).toFixed(1))
+        : calculatedRatingAverage;
 
     const mappedLocation =
       service.localizacao ||
@@ -113,7 +128,7 @@ export function mapServices({
 
       avaliacaoMedia: ratingAverage,
 
-      quantidadeAvaliacoes: serviceReviews.length,
+      quantidadeAvaliacoes: reviewsCount,
 
       agendamentos: serviceSchedules,
     };
