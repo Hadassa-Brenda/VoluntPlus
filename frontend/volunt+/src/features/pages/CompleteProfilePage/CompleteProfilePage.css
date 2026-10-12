@@ -1,0 +1,9 @@
+.complete-profile { min-height: 100vh; display: grid; place-items: center; padding: 2rem; background: #f7faf8; }
+.complete-profile section { width: min(100%, 540px); padding: 2rem; border-radius: 18px; background: white; box-shadow: 0 12px 35px #163b271a; }
+.complete-profile h1 { margin: 1.25rem 0 .5rem; }
+.complete-profile form { display: grid; gap: 1rem; margin-top: 1.5rem; }
+.complete-profile label { display: grid; gap: .35rem; font-weight: 600; }
+.complete-profile input, .complete-profile select { width: 100%; padding: .7rem; border: 1px solid #aabbb1; border-radius: 8px; font: inherit; }
+.complete-profile button { padding: .8rem 1rem; border: 0; border-radius: 8px; background: #26714b; color: white; font: inherit; cursor: pointer; }
+.complete-profile button:disabled { opacity: .6; cursor: wait; }
+.complete-profile [role="alert"] { color: #a22b2b; }

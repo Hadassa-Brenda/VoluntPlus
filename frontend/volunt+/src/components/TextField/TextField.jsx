@@ -11,6 +11,8 @@ export default function GenericTextField({
   variant = "outlined",
   disabled = false,
   helperText,
+  autoComplete,
+  inputMode,
   width = "400px",
   height = "40px",
 }) {
@@ -26,6 +28,8 @@ export default function GenericTextField({
       helperText={helperText}
       variant={variant}
       disabled={disabled}
+      autoComplete={autoComplete}
+      inputProps={{ inputMode }}
       sx={{
         "& .MuiInputLabel-root": {
           fontWeight: 400,

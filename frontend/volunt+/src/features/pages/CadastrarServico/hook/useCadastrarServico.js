@@ -2,11 +2,13 @@ import { useState } from "react";
 
 import { initialFormData, steps } from "../types/CadastrarServicoConst";
 
-import { servicesDTO } from "../../../../types/DTOs/serviceDTO";
+import { createService } from "../../../../api/servicesApi";
 import { SERVICE_STATUS } from "../../../../types/enum/Status";
 import { SERVICE_MODALITIES } from "../../../../types/enum/Modalities";
+import { useCurrentUser } from "../../../../context/CurrentUserContext";
 
 export function useCadastrarServico() {
+  const { user, loading: currentUserLoading } = useCurrentUser();
   const [currentStep, setCurrentStep] = useState(1);
 
   const [formData, setFormData] = useState({
@@ -16,6 +18,7 @@ export function useCadastrarServico() {
   const [errors, setErrors] = useState({});
 
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -55,6 +58,7 @@ export function useCadastrarServico() {
     setFormData((current) => ({
       ...current,
       [name]: type === "checkbox" ? checked : value,
+      ...(name !== "reviewConfirmed" ? { reviewConfirmed: false } : {}),
     }));
 
     setErrors((current) => ({
@@ -155,6 +159,7 @@ export function useCadastrarServico() {
       const isOnline = formData.modalities === SERVICE_MODALITIES[1].value;
 
       if (!isOnline) {
+        if (!formData.tipoLocalizacao) newErrors.tipoLocalizacao = "Selecione o tipo de localização.";
         const cep = (formData.cep || "").trim();
 
         const estado = (formData.estado || "").trim();
@@ -213,13 +218,8 @@ export function useCadastrarServico() {
       });
     }
 
+    if (currentStep === steps.length && !formData.reviewConfirmed) newErrors.reviewConfirmed = "Confirme a revisão antes de salvar.";
     setErrors(newErrors);
-
-    console.log("Validação da etapa:", currentStep);
-
-    console.log("formData:", formData);
-
-    console.log("erros:", newErrors);
 
     return Object.keys(newErrors).length === 0;
   };
@@ -231,6 +231,7 @@ export function useCadastrarServico() {
       return;
     }
 
+    setFormData((current) => ({ ...current, reviewConfirmed: false }));
     setCurrentStep((step) => Math.min(step + 1, steps.length));
   };
 
@@ -296,25 +297,18 @@ export function useCadastrarServico() {
     }));
   };
 
-  const salvarServico = () => {
+  const salvarServico = async () => {
     try {
-      const storedServices = localStorage.getItem("volunt-services");
+      if (currentUserLoading) {
+        setErrors((current) => ({
+          ...current,
+          submit: "Aguarde enquanto seu perfil é carregado.",
+        }));
 
-      let services = [];
-
-      if (storedServices) {
-        const parsedServices = JSON.parse(storedServices);
-
-        if (Array.isArray(parsedServices)) {
-          services = parsedServices;
-        }
+        return null;
       }
 
-      const storedUser = JSON.parse(
-        localStorage.getItem("volunt-user") || "null",
-      );
-
-      const idUsuario = storedUser?.id;
+      const idUsuario = user?.id;
 
       if (!idUsuario) {
         setErrors((current) => ({
@@ -327,17 +321,7 @@ export function useCadastrarServico() {
         return null;
       }
 
-      const ids = [
-        ...services.map((service) => Number(service.id) || 0),
-
-        ...servicesDTO.map((service) => Number(service.id) || 0),
-      ];
-
-      const nextId = Math.max(...ids, 0) + 1;
-
       const novoServico = {
-        id: nextId,
-
         name: formData.name,
 
         descricao: formData.descricao,
@@ -348,10 +332,6 @@ export function useCadastrarServico() {
           ? formData.categorias[0]
           : formData.categorias,
 
-        idUsuario: Number(idUsuario),
-
-        idLocalizacao: null,
-
         status: SERVICE_STATUS[0].value,
 
         providerImage: formData.imagePreview || "",
@@ -360,10 +340,6 @@ export function useCadastrarServico() {
 
         turno: formData.turno,
 
-        avaliacao: 0,
-
-        publicationDate: new Date().toISOString(),
-
         cep: formData.cep || "",
 
         estado: formData.estado || "",
@@ -371,6 +347,7 @@ export function useCadastrarServico() {
         cidade: formData.cidade || "",
 
         bairro: formData.bairro || "",
+        tipoLocalizacao: formData.modalities === "ONLINE" ? null : formData.tipoLocalizacao,
 
         whatsapp: formData.whatsapp || "",
 
@@ -381,15 +358,7 @@ export function useCadastrarServico() {
         site: formData.site || "",
       };
 
-      const updatedServices = [...services, novoServico];
-
-      localStorage.setItem("volunt-services", JSON.stringify(updatedServices));
-
-      console.log("Serviço salvo com sucesso:", novoServico);
-
-      console.log("Usuário responsável:", idUsuario);
-
-      return novoServico;
+      return await createService(novoServico);
     } catch (error) {
       console.error("Erro ao salvar serviço:", error);
 
@@ -402,8 +371,13 @@ export function useCadastrarServico() {
     }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (currentStep < steps.length) {
+      nextStep();
+      return;
+    }
 
     const isValid = validateStep();
 
@@ -411,7 +385,10 @@ export function useCadastrarServico() {
       return;
     }
 
-    const novoServico = salvarServico();
+    if (saving) return;
+    setSaving(true);
+    const novoServico = await salvarServico();
+    setSaving(false);
 
     if (!novoServico) {
       return;
@@ -445,6 +422,7 @@ export function useCadastrarServico() {
     errors,
 
     submitted,
+    saving,
 
     setSubmitted,
 

@@ -80,6 +80,7 @@
 }
 
 .service-summary {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -98,6 +99,8 @@
 }
 
 .service-summary h1 {
+  overflow-wrap: anywhere;
+  white-space: normal;
   margin: 0 0 15px;
   color: #0b1434;
   font-size: clamp(2rem, 4vw, 3.25rem);
@@ -106,6 +109,8 @@
 }
 
 .service-short-description {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
   margin: 0 0 25px;
   color: #697087;
   font-size: 1rem;
@@ -255,6 +260,7 @@
 }
 
 .details-section > p {
+  overflow-wrap: anywhere;
   margin: 0;
   color: #646c82;
   font-size: 0.94rem;
@@ -284,6 +290,8 @@
 }
 
 .provider-card-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
   flex: 1;
 }
 
@@ -653,6 +661,8 @@
   }
 
   .service-summary h1 {
+  overflow-wrap: anywhere;
+  white-space: normal;
     font-size: 2rem;
   }
 
@@ -682,3 +692,8 @@
     width: 100%;
   }
 }
+
+.service-provider-summary > div:last-child { min-width: 0; overflow-wrap: anywhere; }
+.service-contact-card, .details-section, .service-information-grid > * { min-width: 0; }
+.service-contact-card { overflow-wrap: anywhere; }
+.service-breadcrumb > * { min-width: 0; overflow-wrap: anywhere; }

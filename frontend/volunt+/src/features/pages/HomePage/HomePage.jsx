@@ -16,7 +16,7 @@ import "./HomePage.css";
 export default function HomePage() {
   const navigate = useNavigate();
 
-  const { services = [] } = useServices();
+  const { services = [], error } = useServices();
   const [filters, setFilters] = useState(initialFilters);
 
   const filteredServices = useMemo(() => {
@@ -62,7 +62,8 @@ export default function HomePage() {
       </div>
 
       <section className="app-content-grid">
-        <ServicesSection services={filteredServices} />
+        {error ? <p role="alert">Não foi possível carregar os serviços. Tente novamente mais tarde.</p>
+          : <ServicesSection services={filteredServices} />}
       </section>
 
       <Footer />

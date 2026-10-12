@@ -3,9 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRightLeft,
+  Building2,
   CalendarDays,
   Check,
   Edit3,
+  Heart,
   LogOut,
   Mail,
   MapPin,
@@ -16,11 +18,15 @@ import {
 } from "lucide-react";
 
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useClerk, useUser as useClerkUser } from "@clerk/react";
+
+import { useCurrentUser } from "../../../context/CurrentUserContext";
+import { mapBackendUserToFrontend, persistBackendUser } from "../../../api/userProfileStorage";
+import { fetchPublicUserProfile, updateCurrentUserProfile } from "../../../api/usersApi";
 
 import Footer from "../../../layouts/Footer/Footer";
 import Header from "../../../layouts/Header/Header";
 
-import { userDTO } from "../../../types/DTOs/userDTO";
 import { getServices } from "../../../service/serviceService";
 
 import { GENDER_OPTIONS } from "../../../types/enum/Gender";
@@ -28,7 +34,7 @@ import { TipoUsuario } from "../../../types/enum/TipoUsuario";
 import { PROFILE_TYPES } from "../../../types/enum/ProfileTypes";
 import { DiaSemana } from "../../../types/enum/DiaSemana";
 import { Turno } from "../../../types/enum/Turno";
-
+import "../../../styles/global.css";
 import SingleSelect from "components/SingleSelect.tsx/SingleSelect";
 import GenericTextField from "components/TextField/TextField";
 import DataPicker from "components/DataPicker/DataPicker";
@@ -54,45 +60,66 @@ function getOptionLabel(options, value) {
   return option?.label || String(normalizedValue);
 }
 
+function createProfileForm(profile, clerkName = "") {
+  const isPessoaJuridica = profile?.tipoUsuario === "PJ";
+  return {
+    accountName: isPessoaJuridica ? profile?.organizationName || "" : profile?.fullName || clerkName || "",
+    perfilUsuario: profile?.perfilUsuario ?? PROFILE_TYPES[0]?.value ?? "",
+    genero: profile?.genero || "",
+    dataNascimento: profile?.dataNascimento
+      ? profile.dataNascimento.split("T")[0]
+      : "",
+    organizationName: profile?.organizationName || "",
+    cnpj: isPessoaJuridica ? profile?.cnpj || "" : "",
+  };
+}
+
 export default function UserProfilePage() {
   const navigate = useNavigate();
+  const { signOut } = useClerk();
+  const { isLoaded: isClerkUserLoaded, user: clerkUser } = useClerkUser();
+  const {
+    user: currentUser,
+    changeRole,
+    refreshUser,
+    loading: isCurrentUserLoading,
+    error: currentUserError,
+  } = useCurrentUser();
+  const clerkUserId = clerkUser?.id || "";
+  const clerkEmail =
+    clerkUser?.primaryEmailAddress?.emailAddress ||
+    clerkUser?.emailAddresses?.[0]?.emailAddress ||
+    "";
+  const clerkName = clerkUser?.fullName ||
+    [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ");
 
   const { id } = useParams();
 
-  const profileId = id ? Number(id) : null;
-
-  const storedUser = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem("volunt-user") || "null");
-    } catch {
-      return null;
-    }
-  }, []);
+  const profileId = id || null;
 
   const isOwnProfile =
-    !profileId || Number(storedUser?.id) === Number(profileId);
+    !profileId || String(currentUser?.id) === String(profileId);
 
+  const [publicUser, setPublicUser] = useState(null);
+  const [publicLoading, setPublicLoading] = useState(Boolean(profileId));
+  useEffect(() => {
+    if (!profileId || isOwnProfile) { setPublicLoading(false); return; }
+    let cancelled = false;
+    setPublicLoading(true);
+    setPublicUser(null);
+    fetchPublicUserProfile(profileId)
+      .then((profile) => { if (!cancelled) setPublicUser(profile.currentRole === "OFFERER" ? mapBackendUserToFrontend(profile) : null); })
+      .catch(() => { if (!cancelled) setPublicUser(null); })
+      .finally(() => { if (!cancelled) setPublicLoading(false); });
+    return () => { cancelled = true; };
+  }, [profileId, isOwnProfile]);
   const profileUser = useMemo(() => {
-    if (isOwnProfile && storedUser) {
-      return storedUser;
+    if (isOwnProfile) {
+      return currentUser;
     }
 
-    try {
-      const localUsers = JSON.parse(
-        localStorage.getItem("volunt-users") || "[]",
-      );
-
-      const localUser = localUsers.find(
-        (user) => Number(user.id) === Number(profileId),
-      );
-
-      if (localUser) {
-        return localUser;
-      }
-    } catch {}
-
-    return userDTO.find((user) => Number(user.id) === Number(profileId));
-  }, [profileId, isOwnProfile, storedUser]);
+    return publicUser;
+  }, [currentUser, isOwnProfile, publicUser]);
 
   const [user, setUser] = useState(profileUser);
 
@@ -101,6 +128,10 @@ export default function UserProfilePage() {
   const [changingProfile, setChangingProfile] = useState(false);
 
   const [saved, setSaved] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  const [isSwitchingProfile, setIsSwitchingProfile] = useState(false);
 
   const [form, setForm] = useState({
     fullName: profileUser?.fullName || "",
@@ -120,27 +151,20 @@ export default function UserProfilePage() {
       return;
     }
 
-    setForm({
-      fullName: profileUser.fullName || "",
-      email: profileUser.email || "",
-      perfilUsuario: profileUser.perfilUsuario ?? PROFILE_TYPES[0]?.value ?? "",
-      dataNascimento: profileUser.dataNascimento
-        ? profileUser.dataNascimento.split("T")[0]
-        : "",
-    });
-  }, [profileUser]);
-
-  const isOfertante = user?.perfilUsuario === "PF";
+    setForm(createProfileForm(profileUser, clerkName));
+  }, [clerkName, profileUser]);
 
   const isPessoaJuridica = user?.tipoUsuario === "PJ";
+  const isOfertante = isPessoaJuridica || user?.perfilUsuario === "PF";
 
   const profileOptions = PROFILE_TYPES.map((option) => ({
     value: option.value,
     label: option.label,
   }));
 
-  const allServices = useMemo(() => {
-    return getServices();
+  const [allServices, setAllServices] = useState([]);
+  useEffect(() => {
+    getServices().then(setAllServices).catch(() => setAllServices([]));
   }, []);
 
   const publishedServices = useMemo(() => {
@@ -149,7 +173,7 @@ export default function UserProfilePage() {
     }
 
     return allServices.filter(
-      (service) => Number(service.idUsuario) === Number(user.id),
+      (service) => String(service.idUsuario) === String(user.id),
     );
   }, [allServices, user?.id, isOfertante]);
 
@@ -158,102 +182,116 @@ export default function UserProfilePage() {
       ...current,
       [field]: value,
     }));
+    setProfileError("");
   }
 
-  function handleLogout() {
-    localStorage.removeItem("volunt-user");
-
-    setUser(null);
-
-    navigate("/");
+  async function handleLogout() {
+    await signOut({ redirectUrl: "/" });
   }
 
-  function switchProfile() {
+  async function switchProfile() {
     if (!user || isPessoaJuridica) {
       return;
     }
 
-    const updatedUser = {
-      ...user,
-      perfilUsuario: user.perfilUsuario === "PF" ? "BF" : "PF",
-    };
-
-    localStorage.setItem("volunt-user", JSON.stringify(updatedUser));
-
     try {
-      const users = JSON.parse(localStorage.getItem("volunt-users") || "[]");
-      const updatedUsers = users.some(
-        (item) => Number(item.id) === Number(updatedUser.id),
-      )
-        ? users.map((item) =>
-            Number(item.id) === Number(updatedUser.id) ? updatedUser : item,
-          )
-        : [...users, updatedUser];
+      setIsSwitchingProfile(true);
+      setProfileError("");
 
-      localStorage.setItem("volunt-users", JSON.stringify(updatedUsers));
-    } catch {
-      localStorage.setItem("volunt-users", JSON.stringify([updatedUser]));
+      const role = user.perfilUsuario === "PF" ? "BENEFICIARY" : "OFFERER";
+      const updatedUser = await changeRole(role);
+
+      setUser(updatedUser);
+      setChangingProfile(false);
+      setSaved(true);
+
+      window.setTimeout(() => {
+        setSaved(false);
+      }, 2500);
+    } catch (error) {
+      setProfileError(
+        error?.response?.data?.detail ||
+          "Não foi possível trocar o perfil. Tente novamente.",
+      );
+    } finally {
+      setIsSwitchingProfile(false);
     }
-
-    setUser(updatedUser);
-    setChangingProfile(false);
-    setSaved(true);
-
-    window.setTimeout(() => {
-      setSaved(false);
-    }, 2500);
   }
 
-  function saveProfile(event) {
+  async function saveProfile(event) {
     event.preventDefault();
 
-    if (!user) {
+    if (!user || isSavingProfile) {
       return;
     }
 
-    const updatedUser = {
-      ...user,
-
-      fullName: form.fullName,
-
-      email: form.email,
-
-      perfilUsuario: user.tipoUsuario === "PJ" ? "PF" : form.perfilUsuario,
-
-      dataNascimento: form.dataNascimento
-        ? `${form.dataNascimento}T00:00:00.000Z`
-        : null,
+    const genderByFormValue = { M: "MALE", F: "FEMALE", O: "OTHER" };
+    const roleByProfile = { PF: "OFFERER", BF: "BENEFICIARY" };
+    const profilePayload = {
+      ...(isPessoaJuridica
+        ? {
+            organizationName: form.organizationName.trim(),
+            cnpj: form.cnpj.replace(/\D/g, "") || null,
+          }
+        : {
+            fullName: form.accountName.trim(),
+            birthDate: form.dataNascimento || null,
+            ...(form.genero
+              ? { gender: genderByFormValue[form.genero] }
+              : {}),
+          }),
     };
 
-    localStorage.setItem("volunt-user", JSON.stringify(updatedUser));
-
     try {
-      const users = JSON.parse(localStorage.getItem("volunt-users") || "[]");
+      setIsSavingProfile(true);
+      setProfileError("");
 
-      const userExists = users.some(
-        (item) => Number(item.id) === Number(updatedUser.id),
+      if (
+        !isPessoaJuridica &&
+        roleByProfile[form.perfilUsuario] &&
+        form.perfilUsuario !== user.perfilUsuario
+      ) {
+        await changeRole(roleByProfile[form.perfilUsuario]);
+      }
+
+      const response = await updateCurrentUserProfile(profilePayload);
+      let updatedUser = persistBackendUser(
+        { ...profilePayload, ...(response || {}) },
+        user,
       );
 
-      const updatedUsers = userExists
-        ? users.map((item) =>
-            Number(item.id) === Number(updatedUser.id) ? updatedUser : item,
-          )
-        : [...users, updatedUser];
+      if (!isPessoaJuridica && clerkUser?.update && form.accountName.trim() !== clerkName) {
+        const [firstName, ...lastNameParts] = form.accountName
+          .trim()
+          .split(/\s+/);
+        await clerkUser.update({
+          firstName,
+          lastName: lastNameParts.join(" "),
+        });
+      }
 
-      localStorage.setItem("volunt-users", JSON.stringify(updatedUsers));
-    } catch {
-      localStorage.setItem("volunt-users", JSON.stringify([updatedUser]));
+      setUser(updatedUser);
+      setEditing(false);
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 2500);
+
+      refreshUser()
+        .then((refreshedUser) => {
+          if (refreshedUser) {
+            updatedUser = refreshedUser;
+            setUser(refreshedUser);
+          }
+        })
+        .catch(() => undefined);
+    } catch (error) {
+      setProfileError(
+        error?.response?.data?.detail ||
+          error?.message ||
+          "Não foi possível salvar o perfil. Tente novamente.",
+      );
+    } finally {
+      setIsSavingProfile(false);
     }
-
-    setUser(updatedUser);
-
-    setEditing(false);
-
-    setSaved(true);
-
-    window.setTimeout(() => {
-      setSaved(false);
-    }, 2500);
   }
 
   if (!user) {
@@ -262,15 +300,43 @@ export default function UserProfilePage() {
         <Header />
 
         <section className="profile-login-required">
-          <UserRound size={42} />
+          {(!isOwnProfile && publicLoading) || (isOwnProfile && (isCurrentUserLoading || !isClerkUserLoaded)) ? (
+            <p>Carregando perfil...</p>
+          ) : isOwnProfile && clerkUser ? (
+            <>
+              <UserRound size={42} />
+              <h1>{clerkName || "Seu perfil"}</h1>
+              <p>{clerkEmail}</p>
+              <p className="profile-load-error" role="alert">
+                {currentUserError?.response?.status === 401
+                  ? "Sua sessão está ativa, mas o servidor recusou o acesso aos dados do perfil."
+                  : "Não foi possível carregar os dados do perfil no servidor."}
+              </p>
+              <button
+                className="profile-primary-button"
+                type="button"
+                onClick={() => refreshUser().catch(() => undefined)}
+                disabled={isCurrentUserLoading}
+              >
+                {isCurrentUserLoading ? "Carregando..." : "Tentar novamente"}
+              </button>
+              {currentUserError?.response?.status === 404 && (
+                <Link className="profile-primary-button" to="/completar-perfil">Completar perfil</Link>
+              )}
+            </>
+          ) : (
+            <>
+              <UserRound size={42} />
 
-          <h1>Usuário não encontrado</h1>
+              <h1>Usuário não encontrado</h1>
 
-          <p>Não foi possível encontrar este perfil.</p>
+              <p>Não foi possível encontrar este perfil.</p>
 
-          <Link className="profile-primary-button" to="/">
-            Voltar para o início
-          </Link>
+              <Link className="profile-primary-button" to="/">
+                Voltar para o início
+              </Link>
+            </>
+          )}
         </section>
 
         <Footer />
@@ -290,7 +356,15 @@ export default function UserProfilePage() {
     GENDER_OPTIONS.find((item) => item.value === user.genero)?.label ??
     "Não informado";
 
-  const name = user.fullName || "Usuário Voluntá+";
+  const name =
+    (isPessoaJuridica ? user.organizationName : user.fullName) ||
+    "Usuário Voluntá+";
+
+  const avatarUrl = isPessoaJuridica
+    ? null
+    : isOwnProfile
+      ? clerkUser?.imageUrl
+      : user.avatarUrl;
 
   const formattedBirthDate = user.dataNascimento
     ? user.dataNascimento.split("T")[0].split("-").reverse().join("/")
@@ -298,20 +372,25 @@ export default function UserProfilePage() {
 
   return (
     <main className="profile-page">
-      <Header />
+      <Header/>
 
       <div className="profile-container">
         <button
-          className="back-button"
-          type="button"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft size={18} />
-          Voltar
-        </button>
-
+            className="user-register-page__back-button"
+            type="button"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft size={18} />
+            Voltar
+          </button>
         <section className="profile-cover">
-          <div className="profile-avatar">{name.slice(0, 2).toUpperCase()}</div>
+          <div className="profile-avatar">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={isPessoaJuridica ? `Logo de ${name}` : `Foto de ${name}`} />
+            ) : (
+              name.slice(0, 2).toUpperCase()
+            )}
+          </div>
 
           <div className="profile-identity">
             <span>{perfilUsuarioLabel}</span>
@@ -345,7 +424,10 @@ export default function UserProfilePage() {
                 <button
                   className="profile-switch-button"
                   type="button"
-                  onClick={() => setChangingProfile(true)}
+                  onClick={() => {
+                    setProfileError("");
+                    setChangingProfile(true);
+                  }}
                 >
                   <ArrowRightLeft size={17} />
                   Trocar perfil
@@ -476,26 +558,38 @@ export default function UserProfilePage() {
           )}
 
           <aside className="profile-side">
+            {isOwnProfile && clerkUser && (
+              <section className="profile-account-section">
+                <ShieldCheck />
+                <h3>Conta e autenticação</h3>
+                <p>
+                  <strong>Nome da conta:</strong> {name}
+                </p>
+                <p>
+                  <strong>E-mail:</strong> {clerkEmail || "Não informado"}
+                </p>
+                <small>Gerenciada com segurança pelo Clerk.</small>
+              </section>
+            )}
+
             <section>
-              <ShieldCheck />
+              {isPessoaJuridica ? <Building2 /> : <Heart />}
+              <h3>
+                Perfil Voluntá+ · {isPessoaJuridica ? "Organização" : "Pessoa Física"}
+              </h3>
 
-              <h3>Informações do perfil</h3>
-
-              <p>
-                <strong>Tipo:</strong> {tipoUsuarioLabel}
-              </p>
-
-              <p>
-                <strong>Perfil:</strong> {perfilUsuarioLabel}
-              </p>
-
-              <p>
-                <strong>Gênero:</strong> {generoLabel}
-              </p>
-
-              <p>
-                <strong>Data de nascimento:</strong> {formattedBirthDate}
-              </p>
+              {isPessoaJuridica ? (
+                <>
+                  {user.cnpj && <p><strong>CNPJ:</strong> {user.cnpj}</p>}
+                </>
+              ) : (
+                <>
+                  <p><strong>Tipo:</strong> {tipoUsuarioLabel}</p>
+                  <p><strong>Perfil:</strong> {perfilUsuarioLabel}</p>
+                  {user.genero && <p><strong>Gênero:</strong> {generoLabel}</p>}
+                  {user.dataNascimento && <p><strong>Data de nascimento:</strong> {formattedBirthDate}</p>}
+                </>
+              )}
             </section>
           </aside>
         </div>
@@ -541,49 +635,64 @@ export default function UserProfilePage() {
             </header>
 
             <form onSubmit={saveProfile}>
-              <GenericTextField
-                width="300px"
-                label="Nome completo"
-                value={form.fullName}
-                onChange={(value) => updateField("fullName", value)}
-                placeholder="Ex: Luiz Carlos dos Santos"
-              />
-
-              <GenericTextField
-                width="300px"
-                label="E-mail"
-                value={form.email}
-                onChange={(value) => updateField("email", value)}
-                placeholder="Ex: seuemail@gmail.com"
-              />
-
-              <SingleSelect
-                label="Tipo de perfil"
-                width="310px"
-                value={form.perfilUsuario}
-                onChange={(value) => updateField("perfilUsuario", value)}
-                options={profileOptions}
-                disabled={isPessoaJuridica}
-              />
-
-              {isPessoaJuridica && (
-                <div className="profile-notification-container">
-                  <div className="profile-info-message">
-                    <span>
-                      Contas de Pessoa Jurídica podem atuar somente como
-                      ofertante. Para atuar como beneficiário, será necessário
-                      criar uma nova conta como Pessoa Física.
-                    </span>
-                  </div>
+              <section className="profile-edit-section profile-edit-full">
+                <h3>Conta e autenticação</h3>
+                <p>Esses dados são mantidos pelo Clerk.</p>
+                <div className="profile-edit-account-data">
+                  <span><strong>E-mail:</strong> {clerkEmail || "Não informado"}</span>
+                  <span><strong>ID:</strong> {clerkUserId}</span>
                 </div>
+                {!isPessoaJuridica && <GenericTextField
+                  label="Nome completo" value={form.accountName}
+                  onChange={(value) => updateField("accountName", value)}
+                />}
+              </section>
+
+              {isPessoaJuridica ? (
+                <>
+                  <GenericTextField
+                    label="Nome da organização"
+                    value={form.organizationName}
+                    onChange={(value) => updateField("organizationName", value)}
+                    placeholder="Nome público da organização"
+                  />
+                  <GenericTextField
+                    label="CNPJ"
+                    value={form.cnpj}
+                    onChange={(value) => updateField("cnpj", value)}
+                    placeholder="00.000.000/0000-00"
+                  />
+
+                </>
+              ) : (
+                <>
+                  <SingleSelect
+                    label="Tipo de perfil"
+                    value={form.perfilUsuario}
+                    onChange={(value) => updateField("perfilUsuario", value)}
+                    options={profileOptions}
+                  />
+                  <SingleSelect
+                    label="Gênero"
+                    value={form.genero}
+                    onChange={(value) => updateField("genero", value)}
+                    options={GENDER_OPTIONS.map((option) => ({
+                      value: option.value,
+                      label: option.label,
+                    }))}
+                  />
+                  <DataPicker
+                    label="Data de nascimento"
+                    value={form.dataNascimento}
+                    onChange={(value) => updateField("dataNascimento", value)}
+                  />
+                </>
               )}
-              {!isPessoaJuridica && (
-                <DataPicker
-                  label="Data de nascimento"
-                  width="310px"
-                  value={form.dataNascimento}
-                  onChange={(value) => updateField("dataNascimento", value)}
-                />
+
+              {profileError && (
+                <p className="profile-edit-error profile-edit-full" role="alert">
+                  {profileError}
+                </p>
               )}
               <div className="profile-edit-actions profile-edit-full">
                 <button type="button" onClick={() => setEditing(false)}>
@@ -641,16 +750,30 @@ export default function UserProfilePage() {
                 <li>Suas avaliações continuarão vinculadas à conta.</li>
                 <li>Você poderá trocar de perfil novamente depois.</li>
               </ul>
+
+              {profileError && (
+                <p className="profile-switch-error" role="alert">
+                  {profileError}
+                </p>
+              )}
             </div>
 
             <div className="profile-edit-actions profile-edit-full">
-              <button type="button" onClick={() => setChangingProfile(false)}>
+              <button
+                type="button"
+                onClick={() => setChangingProfile(false)}
+                disabled={isSwitchingProfile}
+              >
                 Cancelar
               </button>
 
-              <button type="button" onClick={switchProfile}>
+              <button
+                type="button"
+                onClick={switchProfile}
+                disabled={isSwitchingProfile}
+              >
                 <Check size={17} />
-                Confirmar troca
+                {isSwitchingProfile ? "Trocando..." : "Confirmar troca"}
               </button>
             </div>
           </section>

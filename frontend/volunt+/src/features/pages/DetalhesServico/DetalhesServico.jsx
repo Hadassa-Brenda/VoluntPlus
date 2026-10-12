@@ -1,3 +1,5 @@
+import { formatServiceSchedule } from "../../../utils/serviceSchedule";
+import { TIPO_LOCALIZACAO } from "../../../types/enum/TipoLocalização";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
@@ -33,10 +35,10 @@ import {
 } from "./Utils/DetalhesServicoUtils";
 
 import { useService } from "hook/useService";
+import { useCurrentUser } from "../../../context/CurrentUserContext";
+import { createReview } from "../../../api/servicesApi";
 
 import { SERVICE_MODALITIES } from "../../../types/enum/Modalities";
-import { DiaSemana } from "../../../types/enum/DiaSemana";
-import { Turno } from "../../../types/enum/Turno";
 
 import "./DetalhesServico.css";
 import "../../../styles/global.css";
@@ -46,18 +48,13 @@ export default function DetalhesServico() {
   const navigate = useNavigate();
 
   const { service, loading, error } = useService(id);
+  const { user: storedUser } = useCurrentUser();
 
   const [reviews, setReviews] = useState([]);
+  const [reviewError, setReviewError] = useState("");
 
-  let storedUser = null;
-
-  try {
-    storedUser = JSON.parse(localStorage.getItem("volunt-user") || "null");
-  } catch {
-    storedUser = null;
-  }
-
-  const canReview = storedUser?.perfilUsuario === "BF";
+  const canReview = storedUser?.currentRole === "BENEFICIARY" &&
+    String(storedUser?.id) !== String(service?.idUsuario);
 
   useEffect(() => {
     setReviews(service?.avaliacoes ?? []);
@@ -92,28 +89,13 @@ export default function DetalhesServico() {
   const instagram = service.contato?.instagram;
   const website = service.contato?.site;
   const email = service.usuario?.email;
+  const providerName = service.usuario?.organizationName || service.usuario?.fullName || "Perfil indisponível";
 
   const image =
     service.providerImage ||
     `https://picsum.photos/600/400?random=${serviceId}`;
 
-  const schedule = service.agendamentos?.length
-    ? service.agendamentos
-        .map((agendamento) => {
-          const dayLabel =
-            DiaSemana.find(
-              (item) => String(item.value) === String(agendamento.diaSemana),
-            )?.label ?? String(agendamento.diaSemana);
-
-          const shiftLabel =
-            Turno.find(
-              (item) => String(item.value) === String(agendamento.turno),
-            )?.label ?? String(agendamento.turno);
-
-          return `${dayLabel} - ${shiftLabel}`;
-        })
-        .join(", ")
-    : "Combine diretamente com o responsável";
+  const schedule = formatServiceSchedule(service.agendamentos);
 
   return (
     <main className="service-details-page">
@@ -174,7 +156,7 @@ export default function DetalhesServico() {
               <div>
                 <span>Oferecido por</span>
 
-                <strong>{service.usuario?.fullName ?? "Não informado"}</strong>
+                <strong>{providerName}</strong>
 
                 <small>
                   {service.usuario?.tipoUsuario ?? "Projeto voluntário"}
@@ -229,6 +211,11 @@ export default function DetalhesServico() {
 
                 <InfoItem
                   icon={<Clock3 size={21} />}
+                  label="Tipo de localização"
+                  value={service.modalities === "ONLINE" ? "Online" : TIPO_LOCALIZACAO.find((item) => String(item.value) === String(service.tipoLocalizacao))?.label || "Não informado"}
+                />
+                <InfoItem
+                  icon={<Clock3 size={21} />}
                   label="Horários"
                   value={schedule}
                 />
@@ -259,7 +246,7 @@ export default function DetalhesServico() {
 
                 <div className="provider-card-content">
                   <div>
-                    <h3>{service.usuario?.fullName ?? "Não informado"}</h3>
+                    <h3>{providerName}</h3>
 
                     <span>
                       {service.usuario?.tipoUsuario ?? "Projeto voluntário"}
@@ -270,7 +257,7 @@ export default function DetalhesServico() {
                     Responsável por oferecer este serviço voluntário para a
                     comunidade.
                   </p>
-                  <Link to={`/perfil/${service.idUsuario}`}>
+                  <Link to={String(storedUser?.id) === String(service.idUsuario) ? "/perfil" : `/perfil/${service.idUsuario}`}>
                     Ver perfil
                     <ExternalLink size={15} />
                   </Link>
@@ -281,38 +268,21 @@ export default function DetalhesServico() {
               reviews={reviews}
               canReview={canReview}
               onSubmitReview={async (review) => {
-                const newReview = {
-                  id: Date.now(),
-                  idServico: service.id,
-                  idUsuario: storedUser.id,
-                  usuario: storedUser,
-                  dataAvaliacao: new Date().toISOString(),
-                  dataCriacao: new Date().toISOString(),
-                  ...review,
-                };
-
-                let storedReviews = [];
-
                 try {
-                  const parsedReviews = JSON.parse(
-                    localStorage.getItem("volunt-avaliacoes") || "[]",
-                  );
-
-                  storedReviews = Array.isArray(parsedReviews)
-                    ? parsedReviews
-                    : [];
-                } catch {
-                  storedReviews = [];
+                  setReviewError("");
+                  const created = await createReview(service.id, review);
+                  setReviews((current) => [...current, {
+                    ...created, idServico: created.serviceId,
+                    idUsuario: created.authorId, usuario: storedUser,
+                    dataAvaliacao: created.dataCriacao,
+                  }]);
+                } catch (error) {
+                  setReviewError("Não foi possível publicar a avaliação. Tente novamente.");
+                  throw error;
                 }
-
-                localStorage.setItem(
-                  "volunt-avaliacoes",
-                  JSON.stringify([...storedReviews, newReview]),
-                );
-
-                setReviews((currentReviews) => [...currentReviews, newReview]);
               }}
             />
+            {reviewError && <p role="alert">{reviewError}</p>}
           </div>
           <aside className="service-contact-card">
             <h2>Informações de contato</h2>

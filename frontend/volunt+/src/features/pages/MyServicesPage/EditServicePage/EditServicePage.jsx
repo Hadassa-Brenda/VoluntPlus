@@ -1,3 +1,4 @@
+import { serviceValues } from "../../../../utils/serviceValues";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
@@ -8,6 +9,8 @@ import Footer from "../../../../layouts/Footer/Footer";
 import Button from "../../../../components/Button/Button";
 
 import { getServiceById } from "../../../../service/serviceService";
+import { updateService } from "../../../../api/servicesApi";
+import { useCurrentUser } from "../../../../context/CurrentUserContext";
 
 import {
   initialFormData,
@@ -25,6 +28,7 @@ import "../../../../styles/global.css";
 export default function EditServicePage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useCurrentUser();
 
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -33,24 +37,23 @@ export default function EditServicePage() {
   const [errors, setErrors] = useState({});
 
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadService();
   }, [id]);
 
-  function loadService() {
+  async function loadService() {
     try {
-      const service = getServiceById(id);
+      const service = await getServiceById(id);
 
-      if (!service) {
-        alert("Serviço não encontrado.");
+      if (!service || String(service.ownerId) !== String(user?.id)) {
+        alert("Serviço não encontrado ou sem permissão para editar.");
 
         navigate("/meus-servicos");
 
         return;
       }
-
-      const agendamento = service.agendamentos?.[0];
 
       setFormData({
         ...initialFormData,
@@ -73,11 +76,9 @@ export default function EditServicePage() {
 
         bairro: service.localizacao?.bairro || service.bairro || "",
 
-        diaSemana: [service.diaDaSemana ?? agendamento?.diaSemana].filter(
-          Boolean,
-        ),
-
-        turno: [service.turno ?? agendamento?.turno].filter(Boolean),
+        tipoLocalizacao: service.tipoLocalizacao || service.localizacao?.tipoLocalizacao || "",
+        diaSemana: [...new Set(service.agendamentos?.map((item) => item.diaSemana) || serviceValues(service.diaDaSemana))],
+        turno: [...new Set(service.agendamentos?.map((item) => item.turno) || serviceValues(service.turno))],
 
         whatsapp: service.contato?.telefone || service.whatsapp || "",
 
@@ -113,6 +114,7 @@ export default function EditServicePage() {
       ...current,
 
       [name]: type === "checkbox" ? checked : value,
+      ...(name !== "reviewConfirmed" ? { reviewConfirmed: false } : {}),
     }));
 
     setErrors((current) => ({
@@ -154,6 +156,7 @@ export default function EditServicePage() {
       }
     }
 
+    if (currentStep === 2 && formData.modalities !== "ONLINE" && !formData.tipoLocalizacao) newErrors.tipoLocalizacao = "Selecione o tipo de localização.";
     if (currentStep === 3) {
       const hasContact =
         formData.whatsapp ||
@@ -174,9 +177,7 @@ export default function EditServicePage() {
       });
     }
 
-    if (currentStep === 4) {
-      return true;
-    }
+    if (currentStep === 4 && !formData.reviewConfirmed) newErrors.reviewConfirmed = "Confirme a revisão antes de salvar.";
 
     setErrors(newErrors);
 
@@ -188,6 +189,7 @@ export default function EditServicePage() {
       return;
     }
 
+    setFormData((current) => ({ ...current, reviewConfirmed: false }));
     setCurrentStep((current) => Math.min(current + 1, steps.length));
   }
 
@@ -250,29 +252,22 @@ export default function EditServicePage() {
     }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+
+    if (currentStep < steps.length) {
+      nextStep();
+      return;
+    }
 
     if (!validateCurrentStep()) {
       return;
     }
 
+    if (saving) return;
+    setSaving(true);
     try {
-      const storedServices = localStorage.getItem("volunt-services");
-
-      const services = storedServices ? JSON.parse(storedServices) : [];
-
-      const updatedServices = services.map((service) => {
-        if (Number(service.id) !== Number(id)) {
-          return service;
-        }
-
-        return {
-          ...service,
-
-          /*
-           * Informações básicas
-           */
+      await updateService(id, {
           name: formData.name,
 
           descricao: formData.descricao,
@@ -283,9 +278,7 @@ export default function EditServicePage() {
 
           modalities: formData.modalities,
 
-          status: service.status,
-
-          providerImage: formData.imagePreview || service.providerImage,
+          providerImage: formData.imagePreview,
 
           cep: formData.cep,
 
@@ -294,6 +287,7 @@ export default function EditServicePage() {
           cidade: formData.cidade,
 
           bairro: formData.bairro,
+          tipoLocalizacao: formData.modalities === "ONLINE" ? null : formData.tipoLocalizacao,
 
           diaDaSemana: formData.diaSemana,
 
@@ -307,13 +301,7 @@ export default function EditServicePage() {
 
           site: formData.site,
 
-          freeService: formData.freeService,
-
-          acceptTerms: formData.acceptTerms,
-        };
       });
-
-      localStorage.setItem("volunt-services", JSON.stringify(updatedServices));
 
       alert("Serviço atualizado com sucesso!");
 
@@ -322,7 +310,7 @@ export default function EditServicePage() {
       console.error("Erro ao salvar serviço:", error);
 
       alert("Não foi possível salvar as alterações.");
-    }
+    } finally { setSaving(false); }
   }
 
   if (loading) {
@@ -402,6 +390,7 @@ export default function EditServicePage() {
 
             {currentStep < steps.length ? (
               <button
+                key="next-step"
                 type="button"
                 className="primary-action-button"
                 onClick={nextStep}
@@ -410,9 +399,9 @@ export default function EditServicePage() {
                 <ArrowRight size={18} />
               </button>
             ) : (
-              <button type="submit" className="primary-action-button">
+              <button key="confirm-service" type="submit" className="primary-action-button" disabled={!formData.reviewConfirmed || saving}>
                 <Check size={18} />
-                Salvar alterações
+                {saving ? "Salvando..." : "Confirmar e salvar alterações"}
               </button>
             )}
           </div>

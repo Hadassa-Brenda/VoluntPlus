@@ -1,3 +1,5 @@
+import { serviceValues } from "../../../../../utils/serviceValues";
+import { TIPO_LOCALIZACAO } from "../../../../../types/enum/TipoLocalização";
 import { ImagePlus, MapPin, Monitor, CalendarDays, Clock3 } from "lucide-react";
 
 import { ReviewItem } from "../../../../../components/ReviewItem/ReviewItem";
@@ -10,11 +12,9 @@ import { Turno } from "../../../../../types/enum/Turno";
 import { SERVICE_MODALITIES } from "../../../../../types/enum/Modalities";
 import "./ReviewStep.css";
 
-export function ReviewStep({ formData, onEditStep, texts }) {
+export function ReviewStep({ formData, onEditStep, onChange, errors = {}, texts }) {
   const getOptionLabel = (options, value) => {
-    const option = options.find((item) => String(item.value) === String(value));
-
-    return option?.label || value || "Não informado";
+    return serviceValues(value).map((item) => options.find((option) => String(option.value) === String(item))?.label || item).join(", ") || "Não informado";
   };
 
   const modalidade =
@@ -33,12 +33,7 @@ export function ReviewStep({ formData, onEditStep, texts }) {
     .filter(Boolean)
     .join(", ");
 
-  const imageUrl =
-    typeof formData.image === "string"
-      ? formData.image
-      : formData.image
-        ? URL.createObjectURL(formData.image)
-        : "";
+  const imageUrl = formData.imagePreview || "";
 
   return (
     <section className="form-step review-step">
@@ -132,6 +127,10 @@ export function ReviewStep({ formData, onEditStep, texts }) {
             {!isOnline && (
               <>
                 <ReviewItem
+                  label="Tipo de localização"
+                  value={getOptionLabel(TIPO_LOCALIZACAO, formData.tipoLocalizacao)}
+                />
+                <ReviewItem
                   label="CEP"
                   value={formData.cep || "Não informado"}
                 />
@@ -178,6 +177,11 @@ export function ReviewStep({ formData, onEditStep, texts }) {
           </ReviewSection>
         </div>
       </div>
+      <label className="review-confirmation">
+        <input type="checkbox" name="reviewConfirmed" checked={Boolean(formData.reviewConfirmed)} onChange={onChange} />
+        Conferi os dados e quero salvar este serviço.
+      </label>
+      {errors.reviewConfirmed && <p className="field-error" role="alert">{errors.reviewConfirmed}</p>}
     </section>
   );
 }

@@ -1,3 +1,4 @@
+import { locationKey, serviceValues } from "./serviceValues";
 import { calculateAge } from "../utils/optionsUtils";
 
 function matchesFilter(selectedValues, serviceValue) {
@@ -45,6 +46,7 @@ function getServiceRating(service) {
 
 export function filterServices(services = [], filters = {}) {
   return services.filter((service) => {
+    if (service.status && service.status !== "ATIVO") return false;
     if (filters.search?.trim()) {
       const search = filters.search.trim().toLowerCase();
 
@@ -69,7 +71,7 @@ export function filterServices(services = [], filters = {}) {
     if (
       !matchesFilter(
         filters.locations,
-        service.localizacao?.id ?? service.idLocalizacao,
+        locationKey(service),
       )
     ) {
       return false;
@@ -129,7 +131,7 @@ export function filterServices(services = [], filters = {}) {
     }
 
     if (filters.dataNascimento?.length) {
-      const idade = calculateAge(
+      const idade = service.usuario?.idade ?? calculateAge(
         service.usuario?.dataNascimento ?? service.dataNascimento,
       );
 
@@ -140,7 +142,7 @@ export function filterServices(services = [], filters = {}) {
 
     if (filters.diaDaSemana?.length) {
       const hasDay = service.agendamentos?.some((agendamento) =>
-        matchesFilter(filters.diaDaSemana, agendamento.diaSemana),
+        matchesFilter(filters.diaDaSemana, serviceValues(agendamento.diaSemana)),
       );
 
       if (!hasDay) {
@@ -150,7 +152,7 @@ export function filterServices(services = [], filters = {}) {
 
     if (filters.turno?.length) {
       const hasShift = service.agendamentos?.some((agendamento) =>
-        matchesFilter(filters.turno, agendamento.turno),
+        matchesFilter(filters.turno, serviceValues(agendamento.turno)),
       );
 
       if (!hasShift) {

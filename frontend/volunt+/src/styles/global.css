@@ -89,8 +89,13 @@ img {
   cursor: pointer;
   border-radius: 12px;
   padding: 12px 18px;
-  position: absolute;
-  left: 20px;
+  position: fixed;
+  top: 24px;
+  left: 24px;
+
+  margin: 0;
+  z-index: 100;
+
   box-shadow: 0 10px 30px rgba(7, 15, 47, 0.08);
 }
 

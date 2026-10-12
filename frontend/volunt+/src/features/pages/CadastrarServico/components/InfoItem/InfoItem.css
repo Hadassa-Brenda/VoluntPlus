@@ -1,6 +1,6 @@
 .information-item {
   min-height: 88px;
-  min-width: 88px;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 13px;
@@ -23,6 +23,8 @@
 
 .information-item span,
 .information-item strong {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
   display: block;
 }
 
@@ -33,7 +35,12 @@
 }
 
 .information-item strong {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
   color: #273049;
   font-size: 0.85rem;
   line-height: 1.4;
 }
+
+.information-item-content { min-width: 0; flex: 1; }
+.information-item > svg { flex-shrink: 0; }

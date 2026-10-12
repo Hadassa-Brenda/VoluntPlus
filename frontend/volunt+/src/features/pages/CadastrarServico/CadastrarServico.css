@@ -6,6 +6,18 @@
   color: #111936;
 }
 
+.create-service-back-row {
+  width: min(1400px, calc(100% - 48px));
+  margin: 24px auto 0;
+}
+
+.create-service-back-button {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .create-service-container {
   width: min(1400px, calc(100% - 48px));
   margin: 0 auto;
@@ -554,9 +566,9 @@
 }
 
 .review-service-content > p {
-  display: -webkit-box;
-
-  overflow: hidden;
+  display: block;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 
   margin: 0 0 17px;
 
@@ -565,8 +577,7 @@
   font-size: 0.8rem;
   line-height: 1.6;
 
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
+
 }
 
 .review-service-information {
@@ -637,6 +648,8 @@
 }
 
 .review-section-content {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
   display: grid;
   gap: 13px;
 
@@ -917,3 +930,6 @@
     padding: 18px;
   }
 }
+
+.form-field select { width: 100%; padding: 12px; border: 1px solid #cbd5d1; border-radius: 8px; background: white; font: inherit; }
+.primary-action-button:disabled { opacity: .55; cursor: not-allowed; }

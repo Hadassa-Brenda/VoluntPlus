@@ -1,3 +1,5 @@
+.review-item { min-width: 0; overflow-wrap: anywhere; }
+
 .review-item span,
 .review-item strong {
   display: block;

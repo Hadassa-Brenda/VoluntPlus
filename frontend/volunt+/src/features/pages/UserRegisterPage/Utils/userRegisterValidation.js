@@ -1,3 +1,4 @@
+import { PASSWORD_MIN_LENGTH } from "../../LoginPages/utils/passwordPolicy";
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -65,12 +66,8 @@ export function validateField(field, value, form) {
       return "";
 
     case "cnpj":
-      if (form.tipoUsuario !== "PJ") {
+      if (form.tipoUsuario !== "PJ" || !textValue) {
         return "";
-      }
-
-      if (!textValue) {
-        return "Informe o CNPJ da entidade.";
       }
 
       if (!isValidCnpj(value)) {
@@ -110,12 +107,8 @@ export function validateField(field, value, form) {
       return "";
 
     case "password":
-      if (textValue.length < 8) {
-        return "A senha deve ter pelo menos 8 caracteres.";
-      }
-
-      if (!/[A-Za-z]/.test(textValue) || !/[0-9]/.test(textValue)) {
-        return "A senha deve ter letras e números.";
+      if ([...String(value || "")].length < PASSWORD_MIN_LENGTH) {
+        return `A senha deve ter pelo menos ${PASSWORD_MIN_LENGTH} caracteres.`;
       }
 
       return "";
@@ -136,6 +129,20 @@ export function validateForm(form) {
   const errors = {};
 
   Object.keys(form).forEach((field) => {
+    const error = validateField(field, form[field], form);
+
+    if (error) {
+      errors[field] = error;
+    }
+  });
+
+  return errors;
+}
+
+export function validateIdentityForm(form) {
+  const errors = {};
+
+  ["email", "password", "confirmPassword"].forEach((field) => {
     const error = validateField(field, form[field], form);
 
     if (error) {
