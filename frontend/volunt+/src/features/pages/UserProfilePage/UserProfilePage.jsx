@@ -37,7 +37,6 @@ import { Turno } from "../../../types/enum/Turno";
 import "../../../styles/global.css";
 import SingleSelect from "components/SingleSelect.tsx/SingleSelect";
 import GenericTextField from "components/TextField/TextField";
-import DataPicker from "components/DataPicker/DataPicker";
 
 import "./UserProfilePage.css";
 import "./UserProfileEdit.css";
@@ -101,15 +100,17 @@ export default function UserProfilePage() {
     !profileId || String(currentUser?.id) === String(profileId);
 
   const [publicUser, setPublicUser] = useState(null);
+  const [publicError, setPublicError] = useState(null);
   const [publicLoading, setPublicLoading] = useState(Boolean(profileId));
   useEffect(() => {
     if (!profileId || isOwnProfile) { setPublicLoading(false); return; }
     let cancelled = false;
     setPublicLoading(true);
     setPublicUser(null);
+    setPublicError(null);
     fetchPublicUserProfile(profileId)
       .then((profile) => { if (!cancelled) setPublicUser(profile.currentRole === "OFFERER" ? mapBackendUserToFrontend(profile) : null); })
-      .catch(() => { if (!cancelled) setPublicUser(null); })
+      .catch((error) => { if (!cancelled) { setPublicUser(null); setPublicError(error); } })
       .finally(() => { if (!cancelled) setPublicLoading(false); });
     return () => { cancelled = true; };
   }, [profileId, isOwnProfile]);
@@ -235,7 +236,6 @@ export default function UserProfilePage() {
           }
         : {
             fullName: form.accountName.trim(),
-            birthDate: form.dataNascimento || null,
             ...(form.genero
               ? { gender: genderByFormValue[form.genero] }
               : {}),
@@ -328,9 +328,9 @@ export default function UserProfilePage() {
             <>
               <UserRound size={42} />
 
-              <h1>Usuário não encontrado</h1>
+              <h1>{[401, 403].includes(publicError?.response?.status) ? "Acesso ao perfil negado" : publicError?.response?.status === 404 || !publicError ? "Usuário não encontrado" : "Erro ao carregar perfil"}</h1>
 
-              <p>Não foi possível encontrar este perfil.</p>
+              <p role="alert">{publicError?.response?.status === 401 ? "Faça login para acessar este perfil." : publicError?.response?.status === 403 ? "Você não tem permissão para visualizar este perfil." : publicError?.response?.status === 404 || !publicError ? "Não foi possível encontrar este perfil." : "Não foi possível consultar o perfil no servidor. Tente novamente mais tarde."}</p>
 
               <Link className="profile-primary-button" to="/">
                 Voltar para o início
@@ -681,11 +681,7 @@ export default function UserProfilePage() {
                       label: option.label,
                     }))}
                   />
-                  <DataPicker
-                    label="Data de nascimento"
-                    value={form.dataNascimento}
-                    onChange={(value) => updateField("dataNascimento", value)}
-                  />
+                  <div className="profile-edit-account-data"><span><strong>Data de nascimento:</strong> {form.dataNascimento || "Não informada"} (não editável)</span></div>
                 </>
               )}
 

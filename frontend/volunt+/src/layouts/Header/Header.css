@@ -196,9 +196,8 @@
     padding: 0 9px;
   }
 
-  .header__profile {
-    display: none;
-  }
+  .header__profile { display: inline-flex; }
+  .header__profile > span:last-child { display: none; }
 }
 
 @media (max-width: 980px) {
@@ -248,7 +247,7 @@
 
   .header__actions {
     min-width: 0;
-    flex: 1;
+    flex: 0 1 auto;
     gap: 8px;
   }
 
@@ -326,4 +325,9 @@
   .header__signout span {
     display: none;
   }
+}
+
+@media (max-width: 420px) {
+  .header__avatar { width: 34px; height: 34px; }
+  .header__signout { padding: 6px; }
 }

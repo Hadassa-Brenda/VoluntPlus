@@ -933,3 +933,13 @@
 
 .form-field select { width: 100%; padding: 12px; border: 1px solid #cbd5d1; border-radius: 8px; background: white; font: inherit; }
 .primary-action-button:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Keep every service form control within the viewport on narrow screens. */
+.create-service-card, .form-step, .form-fields-grid, .form-field, .image-upload-area, .image-preview { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.form-field input, .form-field textarea, .form-field select { min-width: 0; max-width: 100%; }
+.form-field, .image-upload-area, .image-preview-information { overflow-wrap: anywhere; }
+.image-preview img { max-width: 100%; }
+@media (max-width: 700px) {
+  .form-fields-grid, .review-layout { grid-template-columns: minmax(0, 1fr); }
+  .create-service-back-row, .create-service-container { max-width: calc(100% - 20px); }
+}

@@ -13,7 +13,7 @@ import Button from "../../../components/Button/Button";
 import { BasicPagination } from "../../../components/Pagination/BasicPagination";
 import { ServiceCard } from "../../../components/ServiceCard/ServiceCard";
 import Footer from "../../../layouts/Footer/Footer";
-import { filterServices } from "../../../utils/filterServices";
+import { filterServices, getServiceRating } from "../../../utils/filterServices";
 import { useServices } from "../../../hook/useServices";
 
 import {
@@ -76,7 +76,7 @@ export default function CatalogoServicos() {
       }
 
       if (sortOrder === "rating") {
-        return Number(b.avaliacaoMedia || 0) - Number(a.avaliacaoMedia || 0);
+        return getServiceRating(b) - getServiceRating(a);
       }
       return 0;
     });
@@ -371,7 +371,7 @@ export default function CatalogoServicos() {
 
                 <h2>Nenhum serviço encontrado</h2>
 
-                <p>Tente alterar os filtros ou usar outra busca.</p>
+                <p>Não há serviços que correspondam a esta combinação. Experimente remover um filtro ou limpar a busca.</p>
 
                 <button type="button" onClick={clearFilters}>
                   Limpar busca e filtros
