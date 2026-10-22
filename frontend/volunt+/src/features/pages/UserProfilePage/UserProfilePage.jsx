@@ -684,6 +684,7 @@ export default function UserProfilePage() {
                   />
                   <div className="profile-edit-birthdate-disabled">
                     <DataPicker
+                      disabled
                       label="Data de nascimento"
                       value={form.dataNascimento}
                       onChange={() => {}}
