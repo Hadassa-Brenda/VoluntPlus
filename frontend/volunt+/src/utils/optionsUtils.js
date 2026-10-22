@@ -22,9 +22,11 @@ export function getUniqueOptions(data = [], { value, label }) {
 
     const optionLabel = label(item);
 
-    optionsMap.set(String(optionValue), {
-      value: optionValue,
-      label: optionLabel,
+    const values = Array.isArray(optionValue) ? optionValue : [optionValue];
+    values.forEach((currentValue) => {
+      if (currentValue !== null && currentValue !== undefined && String(currentValue).trim()) {
+        optionsMap.set(String(currentValue), { value: currentValue, label: Array.isArray(optionLabel) ? String(currentValue) : optionLabel || String(currentValue) });
+      }
     });
   });
 
@@ -80,7 +82,7 @@ export function getLocationTypeOptions(data = []) {
 export function getCategoryOptions(data = []) {
   return getUniqueOptions(data, {
     value: (service) =>
-      service.categoria?.id ?? service.category?.id ?? service.idCategoria,
+      service.categoria?.id ?? service.category?.id ?? service.idCategoria ?? service.categoryId,
 
     label: (service) =>
       service.categoria?.nome ||
@@ -94,16 +96,16 @@ export function getCategoryOptions(data = []) {
 export function getModalityOptions(data = []) {
   return getUniqueOptions(data, {
     value: (service) =>
-      service.modalities ?? service.modality ?? service.modalidade,
+      serviceValues(service.modalities ?? service.modality ?? service.modalidade),
 
     label: (service) => {
       const modalidade = SERVICE_MODALITIES.find(
         (item) =>
           String(item.value) ===
-          String(service.modalities ?? service.modality ?? service.modalidade),
+          String(serviceValues(service.modalities ?? service.modality ?? service.modalidade)[0]),
       );
 
-      return modalidade?.label || "";
+      return modalidade?.label || serviceValues(service.modalities ?? service.modality ?? service.modalidade)[0] || "";
     },
   });
 }
