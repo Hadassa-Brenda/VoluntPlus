@@ -10,49 +10,46 @@ function matchesFilter(selectedValues, serviceValue) {
     return false;
   }
 
-  const serviceValues = Array.isArray(serviceValue)
-    ? serviceValue
-    : [serviceValue];
+  const values = serviceValues(serviceValue);
 
   return selectedValues.some((selectedValue) =>
-    serviceValues.some(
-      (currentValue) => String(selectedValue) === String(currentValue),
+    values.some(
+      (currentValue) => String(selectedValue).trim().toLowerCase() === String(currentValue).trim().toLowerCase(),
     ),
   );
 }
 
-function getServiceRating(service) {
-  if (service.avaliacaoMedia !== undefined) {
+export function getServiceRating(service) {
+  if (service.avaliacaoMedia !== undefined && service.avaliacaoMedia !== null) {
     return Number(service.avaliacaoMedia) || 0;
   }
 
-  const evaluations = Array.isArray(service.avaliacao)
-    ? service.avaliacao
-    : service.avaliacao
-      ? [service.avaliacao]
-      : [];
+  const evaluations = service.avaliacoes ?? service.reviews ?? service.avaliacao ?? [];
+  const reviews = Array.isArray(evaluations) ? evaluations : [evaluations];
 
-  if (!evaluations.length) {
+  if (!reviews.length) {
     return 0;
   }
 
   return (
-    evaluations.reduce(
+    reviews.reduce(
       (sum, evaluation) => sum + Number(evaluation.nota || 0),
       0,
-    ) / evaluations.length
+    ) / reviews.length
   );
 }
 
 export function filterServices(services = [], filters = {}) {
   return services.filter((service) => {
-    if (service.status && service.status !== "ATIVO") return false;
+    if (service.status && !["ATIVO", "ACTIVE"].includes(String(service.status).toUpperCase())) return false;
     if (filters.search?.trim()) {
       const search = filters.search.trim().toLowerCase();
 
       const matchesSearch = [
         service.name,
+        service.titulo,
         service.descricao,
+        service.description,
         service.categoria?.nome || service.category?.name,
         service.localizacao?.bairro || service.bairro,
         service.localizacao?.cidade || service.cidade,
@@ -80,7 +77,7 @@ export function filterServices(services = [], filters = {}) {
     if (
       !matchesFilter(
         filters.category,
-        service.categoria?.id ?? service.category?.id ?? service.idCategoria,
+        service.categoria?.id ?? service.category?.id ?? service.idCategoria ?? service.categoryId,
       )
     ) {
       return false;
@@ -162,7 +159,7 @@ export function filterServices(services = [], filters = {}) {
 
     if (filters.avaliacao?.length) {
       const rating = getServiceRating(service);
-      const hasMinimumRating = filters.avaliacao.some(
+      const hasMinimumRating = rating > 0 && filters.avaliacao.some(
         (selectedRating) => rating >= Number(selectedRating),
       );
 
