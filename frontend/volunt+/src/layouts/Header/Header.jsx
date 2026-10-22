@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useAuth, useUser } from "@clerk/react";
+import { useAuth, useClerk, useUser } from "@clerk/react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, Plus, X } from "lucide-react";
+import { LogOut, Menu, Plus, X } from "lucide-react";
 
 import { useCurrentUser } from "../../context/CurrentUserContext";
 
@@ -9,6 +9,7 @@ import "./Header.css";
 
 export default function Header({ onCreateUser, onOpenLogin }) {
   const navigate = useNavigate();
+  const { signOut } = useClerk();
   const { isLoaded, isSignedIn } = useAuth();
   const { user: clerkUser } = useUser();
   const { user: currentUser, loading } = useCurrentUser();
@@ -90,6 +91,19 @@ export default function Header({ onCreateUser, onOpenLogin }) {
             </span>
             <span>Minha conta</span>
           </Link>
+        )}
+
+        {isLoaded && isSignedIn && (
+          <button
+            className="header__signout"
+            type="button"
+            title="Sair da conta"
+            aria-label="Sair da conta"
+            onClick={() => signOut({ redirectUrl: "/" })}
+          >
+            <LogOut size={20} aria-hidden="true" />
+            <span>Sair</span>
+          </button>
         )}
 
         {isLoaded && !isSignedIn && (
