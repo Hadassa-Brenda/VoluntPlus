@@ -21,6 +21,7 @@ export default function DataPicker({
   onBlur,
   error = false,
   helperText = "",
+  disabled = false,
 }) {
   const [cleared, setCleared] = React.useState(false);
 
@@ -50,6 +51,7 @@ export default function DataPicker({
       >
         <DatePicker
           label={label}
+          disabled={disabled}
           value={pickerValue}
           onChange={(newValue) => {
             if (!newValue || !newValue.isValid()) {
@@ -64,7 +66,7 @@ export default function DataPicker({
           format="DD/MM/YYYY"
           slotProps={{
             field: {
-              clearable: true,
+              clearable: !disabled,
               onBlur,
 
               onClear: () => {
