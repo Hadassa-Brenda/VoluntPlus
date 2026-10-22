@@ -37,6 +37,7 @@ import { Turno } from "../../../types/enum/Turno";
 import "../../../styles/global.css";
 import SingleSelect from "components/SingleSelect.tsx/SingleSelect";
 import GenericTextField from "components/TextField/TextField";
+import DataPicker from "components/DataPicker/DataPicker";
 
 import "./UserProfilePage.css";
 import "./UserProfileEdit.css";
@@ -681,7 +682,14 @@ export default function UserProfilePage() {
                       label: option.label,
                     }))}
                   />
-                  <div className="profile-edit-account-data"><span><strong>Data de nascimento:</strong> {form.dataNascimento || "Não informada"} (não editável)</span></div>
+                  <div className="profile-edit-birthdate-disabled">
+                    <DataPicker
+                      disabled
+                      label="Data de nascimento"
+                      value={form.dataNascimento}
+                      onChange={() => {}}
+                    />
+                  </div>
                 </>
               )}
 

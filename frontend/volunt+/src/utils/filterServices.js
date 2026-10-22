@@ -20,23 +20,23 @@ function matchesFilter(selectedValues, serviceValue) {
 }
 
 export function getServiceRating(service) {
-  if (service.avaliacaoMedia !== undefined && service.avaliacaoMedia !== null) {
-    return Number(service.avaliacaoMedia) || 0;
+  const reviews = service.avaliacoes ?? service.reviews ?? service.avaliacao;
+  const entries = Array.isArray(reviews) ? reviews : reviews ? [reviews] : [];
+  const scores = entries
+    .map((review) => Number(review?.nota ?? review?.rating ?? review?.score ?? review))
+    .filter((score) => Number.isFinite(score) && score >= 1 && score <= 5);
+
+  // Prefer actual reviews when available; otherwise use the API aggregate.
+  if (scores.length) {
+    return scores.reduce((sum, score) => sum + score, 0) / scores.length;
   }
 
-  const evaluations = service.avaliacoes ?? service.reviews ?? service.avaliacao ?? [];
-  const reviews = Array.isArray(evaluations) ? evaluations : [evaluations];
-
-  if (!reviews.length) {
-    return 0;
-  }
-
-  return (
-    reviews.reduce(
-      (sum, evaluation) => sum + Number(evaluation.nota || 0),
-      0,
-    ) / reviews.length
+  const aggregate = Number(
+    service.avaliacaoMedia ?? service.averageRating ?? service.rating ?? 0,
   );
+  return Number.isFinite(aggregate) && aggregate >= 1 && aggregate <= 5
+    ? aggregate
+    : 0;
 }
 
 export function filterServices(services = [], filters = {}) {
@@ -159,8 +159,10 @@ export function filterServices(services = [], filters = {}) {
 
     if (filters.avaliacao?.length) {
       const rating = getServiceRating(service);
-      const hasMinimumRating = rating > 0 && filters.avaliacao.some(
-        (selectedRating) => rating >= Number(selectedRating),
+      // A selected star count represents its rating band, not a minimum.
+      // Example: 4 stars matches averages from 4.0 to 4.99.
+      const hasMinimumRating = rating >= 1 && filters.avaliacao.some(
+        (selectedRating) => Math.floor(rating) === Number(selectedRating),
       );
 
       if (!hasMinimumRating) {
