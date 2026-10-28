@@ -188,12 +188,6 @@ export default function DetalhesServico() {
         <div className="service-details-layout">
           <div className="service-details-content">
             <section className="details-section">
-              <h2>Sobre o serviço</h2>
-
-              <p>{service.descricao || "Nenhuma descrição informada."}</p>
-            </section>
-
-            <section className="details-section">
               <h2>Informações do atendimento</h2>
 
               <div className="service-information-grid">
