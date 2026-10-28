@@ -70,7 +70,6 @@ function createProfileForm(profile, clerkName = "") {
       ? profile.dataNascimento.split("T")[0]
       : "",
     organizationName: profile?.organizationName || "",
-    cnpj: isPessoaJuridica ? profile?.cnpj || "" : "",
   };
 }
 
@@ -233,7 +232,6 @@ export default function UserProfilePage() {
       ...(isPessoaJuridica
         ? {
             organizationName: form.organizationName.trim(),
-            cnpj: form.cnpj.replace(/\D/g, "") || null,
           }
         : {
             fullName: form.accountName.trim(),
@@ -659,8 +657,9 @@ export default function UserProfilePage() {
                   />
                   <GenericTextField
                     label="CNPJ"
-                    value={form.cnpj}
-                    onChange={(value) => updateField("cnpj", value)}
+                    value={user.cnpj || ""}
+                    disabled
+                    helperText="O CNPJ não pode ser alterado após o cadastro."
                     placeholder="00.000.000/0000-00"
                   />
 
