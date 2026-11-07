@@ -2,12 +2,16 @@ import { Heart, Search, Users } from "lucide-react";
 
 import { heroImages } from "../../assets/imgs/heroImages";
 import { HERO_CONTENT } from "../../constants/content";
+import { useCurrentUser } from "../../context/CurrentUserContext";
 import "./Hero.css";
 import { useNavigate } from "react-router-dom";
 import Button from "components/Button/Button";
 
 export default function Hero() {
   const navigate = useNavigate();
+  const { user } = useCurrentUser();
+  const isBeneficiary = user?.currentRole === "BENEFICIARY";
+
   return (
     <section className="hero" id="top">
       <div className="hero__text">
@@ -34,14 +38,16 @@ export default function Hero() {
             children={HERO_CONTENT.findHelpButton}
           />
 
-          <button
-            className="hero__button hero__button--primary"
-            type="button"
-            onClick={() => navigate("cadastrar-servico")}
-          >
-            <Heart size={18} />
-            {HERO_CONTENT.offerHelpButton}
-          </button>
+          {!isBeneficiary && (
+            <button
+              className="hero__button hero__button--primary"
+              type="button"
+              onClick={() => navigate("cadastrar-servico")}
+            >
+              <Heart size={18} />
+              {HERO_CONTENT.offerHelpButton}
+            </button>
+          )}
         </div>
       </div>
 
