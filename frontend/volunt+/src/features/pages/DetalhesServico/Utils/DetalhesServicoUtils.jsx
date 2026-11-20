@@ -71,7 +71,7 @@ export function buildWhatsAppLink(phone, serviceTitle) {
     : `55${digits}`;
 
   const message = encodeURIComponent(
-    `Olá! Encontrei o serviço "${serviceTitle}" na plataforma Voluntá+ e gostaria de saber mais.`,
+    `Olá! Encontrei o serviço "${serviceTitle}" na plataforma Volunt+ e gostaria de saber mais.`,
   );
 
   return `https://wa.me/${numberWithCountryCode}?text=${message}`;

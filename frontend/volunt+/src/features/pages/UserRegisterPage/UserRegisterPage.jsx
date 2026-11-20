@@ -294,7 +294,7 @@ export default function UserRegisterPage() {
       }
 
       try {
-        setPendingStage("Salvando seu perfil no Voluntá+");
+      setPendingStage("Salvando seu perfil no Volunt+");
         await createVoluntPlusUser(createdSession);
         navigate("/", { replace: true });
       } catch {
@@ -534,7 +534,7 @@ export default function UserRegisterPage() {
         </button>
 
         <h1 className="user-register-page__topbar-title">
-          Cadastre-se no Voluntá+
+          Cadastre-se no Volunt+
         </h1>
       </header>
 
@@ -819,7 +819,7 @@ export default function UserRegisterPage() {
               <div className="user-register-form__safe-message">
                 <ShieldCheck size={17} />
                 Sua senha é processada somente pelo Clerk e não é armazenada
-                pelo Voluntá+.
+            pelo Volunt+.
               </div>
             </>
           )}

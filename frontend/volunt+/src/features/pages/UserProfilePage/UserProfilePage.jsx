@@ -357,7 +357,7 @@ export default function UserProfilePage() {
 
   const name =
     (isPessoaJuridica ? user.organizationName : user.fullName) ||
-    "Usuário Voluntá+";
+    "Usuário Volunt+";
 
   const avatarUrl = isPessoaJuridica
     ? null
@@ -574,7 +574,7 @@ export default function UserProfilePage() {
             <section>
               {isPessoaJuridica ? <Building2 /> : <Heart />}
               <h3>
-                Perfil Voluntá+ · {isPessoaJuridica ? "Organização" : "Pessoa Física"}
+                Perfil Volunt+ · {isPessoaJuridica ? "Organização" : "Pessoa Física"}
               </h3>
 
               {isPessoaJuridica ? (

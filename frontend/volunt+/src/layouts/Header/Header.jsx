@@ -24,9 +24,9 @@ export default function Header({ onCreateUser, onOpenLogin }) {
 
   return (
     <header className={`header ${menuOpen ? "header--menu-open" : ""}`}>
-      <Link to="/" className="header__brand" aria-label="Voluntá+ início">
+      <Link to="/" className="header__brand" aria-label="Volunt+ início">
         <span className="header__brand-icon">♡</span>
-        <strong>Voluntá+</strong>
+        <strong>Volunt+</strong>
       </Link>
 
       <button
