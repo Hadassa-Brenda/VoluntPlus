@@ -44,6 +44,7 @@ export function BasicInformationStep({
         <MultiSelect
           label="Categoria"
           name="categorias"
+          width="100%"
           value={formData.categorias || []}
           onChange={onChange}
           error={errors.categorias}

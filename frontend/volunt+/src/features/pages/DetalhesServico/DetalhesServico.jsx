@@ -52,12 +52,19 @@ export default function DetalhesServico() {
 
   const [reviews, setReviews] = useState([]);
   const [reviewError, setReviewError] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewAlreadyExists, setReviewAlreadyExists] = useState(false);
 
+  const alreadyReviewed = reviewAlreadyExists || reviews.some(
+    (review) => String(review.authorId ?? review.idUsuario) === String(storedUser?.id),
+  );
   const canReview = storedUser?.currentRole === "BENEFICIARY" &&
-    String(storedUser?.id) !== String(service?.idUsuario);
+    String(storedUser?.id) !== String(service?.idUsuario) &&
+    !alreadyReviewed;
 
   useEffect(() => {
     setReviews(service?.avaliacoes ?? []);
+    setReviewAlreadyExists(false);
   }, [service]);
 
   if (loading) {
@@ -261,9 +268,12 @@ export default function DetalhesServico() {
             <ServiceReviews
               reviews={reviews}
               canReview={canReview}
+              alreadyReviewed={alreadyReviewed}
+              submitting={reviewSubmitting}
               onSubmitReview={async (review) => {
                 try {
                   setReviewError("");
+                  setReviewSubmitting(true);
                   const created = await createReview(service.id, review);
                   setReviews((current) => [...current, {
                     ...created, idServico: created.serviceId,
@@ -271,8 +281,15 @@ export default function DetalhesServico() {
                     dataAvaliacao: created.dataCriacao,
                   }]);
                 } catch (error) {
-                  setReviewError("Não foi possível publicar a avaliação. Tente novamente.");
+                  if (error?.response?.status === 409) {
+                    setReviewAlreadyExists(true);
+                    setReviewError("");
+                  } else {
+                    setReviewError("Não foi possível publicar a avaliação. Tente novamente.");
+                  }
                   throw error;
+                } finally {
+                  setReviewSubmitting(false);
                 }
               }}
             />

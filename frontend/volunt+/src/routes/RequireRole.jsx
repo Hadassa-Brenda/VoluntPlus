@@ -12,7 +12,7 @@ export default function RequireRole({ role, children }) {
     <main>
       <h1>Perfil indisponível</h1>
       <p>{error?.response?.status === 404
-        ? "Sua conta Clerk ainda não tem um perfil no Voluntá+. Complete seus dados para continuar."
+      ? "Sua conta Clerk ainda não tem um perfil no Volunt+. Complete seus dados para continuar."
         : "Não foi possível consultar seu perfil no servidor."}</p>
       <button type="button" onClick={() => refreshUser().catch(() => undefined)}>Tentar novamente</button>
       {error?.response?.status === 404 && <Link to="/completar-perfil">Completar perfil</Link>}

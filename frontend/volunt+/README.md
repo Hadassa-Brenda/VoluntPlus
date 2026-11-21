@@ -1,4 +1,4 @@
-# Voluntá+ — frontend
+# Volunt+ — frontend
 
 Aplicação web em React 18 para descobrir serviços voluntários, cadastrar serviços e avaliar iniciativas. A autenticação e a recuperação de senha usam Clerk; perfis, papéis, serviços e avaliações são persistidos na API VoluntPlus.
 

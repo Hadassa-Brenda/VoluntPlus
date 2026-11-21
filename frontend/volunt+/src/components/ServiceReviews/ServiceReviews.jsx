@@ -7,6 +7,7 @@ export function ServiceReviews({
   reviews = [],
   onSubmitReview,
   canReview = false,
+  alreadyReviewed = false,
   submitting = false,
 }) {
   const [rating, setRating] = useState(0);
@@ -112,7 +113,9 @@ export function ServiceReviews({
         </form>
       ) : (
         <p className="review-form__restricted">
-          Apenas beneficiários podem avaliar e comentar serviços de outras pessoas. O responsável pelo serviço não pode avaliar o próprio serviço.
+          {alreadyReviewed
+            ? "Você já avaliou este serviço."
+            : "Apenas beneficiários podem avaliar e comentar serviços de outras pessoas. O responsável pelo serviço não pode avaliar o próprio serviço."}
         </p>
       )}
 

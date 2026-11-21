@@ -173,9 +173,9 @@ export default function ServiceCreatePage({ onSubmitService }) {
           Voltar
         </button>
 
-        <a className="header__brand" href="#top" aria-label="Voluntá+ início">
+        <a className="header__brand" href="#top" aria-label="Volunt+ início">
           <span className="header__brand-icon">♡</span>
-          <strong>Voluntá+</strong>
+          <strong>Volunt+</strong>
         </a>
       </header>
 

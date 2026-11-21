@@ -1,4 +1,4 @@
-# VoluntPlus (Voluntá+)
+# VoluntPlus (Volunt+)
 
 Plataforma para conectar pessoas e organizações a serviços e oportunidades de voluntariado.
 

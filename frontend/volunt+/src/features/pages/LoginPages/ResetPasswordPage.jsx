@@ -342,9 +342,9 @@ export default function ResetPasswordPage() {
           </button>
         </header>
 
-        <Link className="header__brand" to="/" aria-label="Voluntá+ início">
+        <Link className="header__brand" to="/" aria-label="Volunt+ início">
           <span className="header__brand-icon">♡</span>
-          <strong>Voluntá+</strong>
+          <strong>Volunt+</strong>
         </Link>
 
         <div className="login-page__text">
