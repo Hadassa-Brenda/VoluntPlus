@@ -17,6 +17,8 @@ const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 
 const MenuProps = {
+  disableScrollLock: true,
+  marginThreshold: null,
   slotProps: {
     paper: {
       className: "multiple-select__paper",
